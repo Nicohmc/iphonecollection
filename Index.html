@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f8f5">
+  <title>My Collection — 我的收藏庫</title>
+  <?!= include("Styles"); ?>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <header class="brand"><span class="brand-icon">▤</span><span><strong>My Collection</strong><small>我的靈感收藏庫</small></span><button id="closeSidebar" class="icon-btn mobile-only" title="關閉選單" aria-label="關閉選單">✕</button></header>
+      <div class="sidebar-main">
+        <button class="nav-all active" id="allArticles"><span>▦</span> 全部收藏 <span class="count" id="allCount">0</span></button>
+        <div class="side-label"><span>分類目錄</span><button id="addRoot" class="small-icon-btn" title="新增主分類" aria-label="新增主分類">＋</button></div>
+        <nav id="categoryTree" class="category-tree" aria-label="文章分類"></nav>
+      </div>
+      <footer class="sidebar-footer"><button id="exportData" class="footer-btn">↥ 匯出資料</button><button id="importData" class="footer-btn">↧ 匯入資料</button><input id="importFile" type="file" accept="application/json,.json" hidden><span class="footer-hint">資料儲存於 Google Sheets</span></footer>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <main class="main-content">
+      <div class="topbar"><button id="menuSidebar" class="icon-btn mobile-only" title="開啟分類選單" aria-label="開啟分類選單">☰</button><div class="search-area"><span class="search-icon">⌕</span><input id="searchInput" type="search" placeholder="搜尋文章、分類、標籤或筆記..." autocomplete="off"><kbd>/</kbd></div><button id="newArticle" class="primary-btn">＋ <span>新增收藏</span></button></div>
+      <div class="content-wrap">
+        <section class="page-intro"><div class="eyebrow">YOUR PERSONAL LIBRARY</div><div class="intro-heading"><div><h1 id="pageTitle">全部收藏</h1><p id="pageSubtitle">收藏值得一讀的好內容，讓每個想法都有自己的位置。</p></div><div class="intro-count"><strong id="visibleCount">0</strong><span>篇收藏</span></div></div></section>
+        <section class="toolbar"><div class="crumbs" id="breadcrumbs"></div><div class="toolbar-actions"><select id="sortSelect" aria-label="排序"><option value="newest">最近收藏</option><option value="oldest">最早收藏</option><option value="title">標題 A–Z</option></select><div class="view-switch" role="group" aria-label="顯示模式"><button id="gridView" class="active" aria-label="卡片檢視" title="卡片檢視">▦</button><button id="listView" aria-label="清單檢視" title="清單檢視">☷</button></div></div></section>
+        <div id="articles" class="articles grid-view"></div>
+        <div id="emptyState" class="empty-state" hidden><div class="empty-icon">◇</div><h2>還沒有找到文章</h2><p id="emptyDescription">換個關鍵字搜尋，或新增第一篇收藏吧。</p><button id="emptyAdd" class="secondary-btn">＋ 新增收藏</button></div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="articleDialog" class="modal"><form id="articleForm" method="dialog" novalidate><div class="modal-header"><div><span class="modal-eyebrow">COLLECTION</span><h2 id="articleDialogTitle">新增收藏</h2></div><button type="button" class="close-btn" data-close="articleDialog" aria-label="關閉">✕</button></div><div class="modal-body">
+    <label for="articleUrl">文章網址 <span class="required">*</span></label><input id="articleUrl" type="url" placeholder="https://example.com/article" required><small class="field-help">請選擇分類；標題、摘要和封面若未填寫，GAS 將嘗試自動擷取。</small>
+    <label for="articleTitle">文章標題</label><input id="articleTitle" placeholder="例如：值得收藏的 AI 工具整理">
+    <label for="articleCategory">主要分類</label><select id="articleCategory"><option value="">請選擇分類</option></select>
+    <label for="articleTags">標籤 <span class="muted">（用逗號分隔）</span></label><input id="articleTags" placeholder="AI 工具, 生產力, 網站資源">
+    <label for="articleDescription">文章摘要</label><textarea id="articleDescription" rows="3" placeholder="這篇文章的重點是什麼？"></textarea>
+    <label for="articleNotes">我的筆記</label><textarea id="articleNotes" rows="3" placeholder="收藏這篇文章的原因、自己的想法... "></textarea>
+    <label for="articleImage">封面圖片網址 <span class="muted">（選填）</span></label><input id="articleImage" type="url" placeholder="https://example.com/image.jpg">
+    <p id="articleFormError" class="error-text" hidden></p>
+  </div><div class="modal-footer"><button type="button" class="secondary-btn" data-close="articleDialog">取消</button><button type="submit" class="primary-btn">儲存收藏</button></div></form></dialog>
+
+  <dialog id="categoryDialog" class="modal small-modal"><form id="categoryForm" method="dialog" novalidate><div class="modal-header"><div><span class="modal-eyebrow">CATEGORIES</span><h2 id="categoryDialogTitle">新增分類</h2></div><button type="button" class="close-btn" data-close="categoryDialog" aria-label="關閉">✕</button></div><div class="modal-body"><label for="categoryName">分類名稱 <span class="required">*</span></label><input id="categoryName" maxlength="60" placeholder="例如：東京美食" required><label for="categoryParent">上層分類</label><select id="categoryParent"><option value="">無（主分類）</option></select><p class="field-help">選擇上層分類就能建立子分類；不限制分類層數。</p><p id="categoryFormError" class="error-text" hidden></p></div><div class="modal-footer"><button type="button" class="secondary-btn" data-close="categoryDialog">取消</button><button type="submit" class="primary-btn">儲存分類</button></div></form></dialog>
+
+  <dialog id="detailDialog" class="modal detail-modal"><div class="modal-header"><div><span class="modal-eyebrow">SAVED ARTICLE</span><h2>收藏詳細資訊</h2></div><button type="button" class="close-btn" data-close="detailDialog" aria-label="關閉">✕</button></div><div id="detailContent" class="modal-body detail-body"></div><div class="modal-footer"><button id="deleteArticle" type="button" class="danger-text-btn">刪除</button><div class="footer-right"><button id="editArticle" type="button" class="secondary-btn">編輯</button><a id="openArticle" class="primary-btn link-btn" target="_blank" rel="noopener noreferrer">↗ 閱讀原文</a></div></div></dialog>
+
+  <dialog id="confirmDialog" class="modal small-modal"><div class="modal-header"><div><span class="modal-eyebrow">CONFIRMATION</span><h2 id="confirmTitle">確認操作</h2></div><button type="button" class="close-btn" data-close="confirmDialog" aria-label="關閉">✕</button></div><div class="modal-body"><p id="confirmMessage"></p></div><div class="modal-footer"><button type="button" class="secondary-btn" data-close="confirmDialog">取消</button><button type="button" id="confirmAction" class="danger-btn">確認</button></div></dialog>
+  <dialog id="loginDialog" class="modal small-modal"><form id="loginForm"><div class="modal-header"><div><span class="modal-eyebrow">PRIVATE LIBRARY</span><h2>連接我的收藏庫</h2></div></div><div class="modal-body"><p>輸入你在 GAS「指令碼屬性」設定的 API_TOKEN。金鑰只保存在這個分頁的 sessionStorage，不會寫入網站原始碼。</p><label for="apiToken">API_TOKEN</label><input id="apiToken" type="password" required autocomplete="off" placeholder="貼上你的私密金鑰"><p id="loginError" class="error-text" hidden></p></div><div class="modal-footer"><button class="primary-btn" type="submit">連接 Google Sheets</button></div></form></dialog><div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <?!= include("Script"); ?>
+</body>
+</html>
